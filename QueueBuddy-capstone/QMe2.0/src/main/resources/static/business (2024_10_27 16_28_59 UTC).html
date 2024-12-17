@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #messages {
+            text-align: left;
+            width: 50%;
+            padding: 1em;
+            border: 1px solid black;
+        }
+    </style>
+    <title>Sample WebSocket Client</title>
+    
+</head>
+<body>
+<h1>Line Manager</h1>
+<h3>Your store code is:</h3>
+<h4 id="storeCode">code should be here</h4>
+
+<h3>People waiting:</h3>
+<h4 id="peopleNumber">#num of people</h4>
+
+<h3>General Message:</h3>
+<div id="messages" class="messages"></div>
+
+<div id="messages2" class="messages"></div>
+
+<div class="container">
+<input id="username"/>
+<input id="pwd">
+    <button id="authenticate">Authenticate</button>
+<button id="next">NEXT</button>
+<button id="closeBtn">CLOSE</button>
+<button id="cancel">CANCEL</button>
+<button id="openbtn">OPEN</button>
+  
+
+</div>
+</body>
+<script>
+    const messageWindow = document.getElementById("messages");
+ 
+    const sendButton = document.getElementById("send");
+    const messageInput = document.getElementById("message");
+ 
+    const fileInput = document.getElementById("file");
+    const sendImageButton = document.getElementById("sendImage");
+ 
+    const socket = new WebSocket("ws://queuebuddy.us-east-1.elasticbeanstalk.com:80/socket");
+    const user = document.getElementById("username")
+    const pwd = document.getElementById("pwd")
+    const sessId = "sessionID"
+    socket.binaryType = "arraybuffer";
+    
+    function addMessageToWindow(message) {
+    	//messages2.innerHTML += `<div>${message}</div>`
+    }
+    
+    next.onclick = function (event){
+    	sendJson({requestType: 389, businessRequest: true, id:sessionStorage.getItem(sessId), command:"NEXT"})
+    }
+    
+    closeBtn.onclick = function (event){
+    	sendJson({requestType: 389, businessRequest: true, id:sessionStorage.getItem(sessId), command:"CLOSE"})
+    }
+    
+	cancel.onclick = function (event){
+		sendJson({requestType: 389, businessRequest: true, id:sessionStorage.getItem(sessId), command:"CANCEL"})
+    }
+	
+	openbtn.onclick = function (event){
+		sendJson({requestType: 389, businessRequest: true, id:sessionStorage.getItem(sessId), command:"OPEN"})
+    }
+	
+	authenticate.onclick= function(event){
+		sendJson({requestType: 678, businessRequest: true, password:pwd.value, username:username.value})
+	}
+ 
+ 
+    socket.onopen = function (event) {
+    	
+        addMessageToWindow("Connected");
+        if(sessionStorage.getItem(sessId) === null){
+        	//addMessageToWindow("Send Request of ID");
+        	//socket.send("678");
+        } else {
+        	//addMessageToWindow("Checking for session");
+        	
+        	//sendJson({requestType: 793, id:sessionStorage.getItem(sessId)})
+        	
+        }
+        
+    };
+ 
+    socket.onmessage = function (event) {
+    	
+    	var response = JSON.parse(event.data);
+    	if(response.requestType === 678){
+    		if(response.command !== false){
+    			sessionStorage.setItem(sessId, response.command);
+    			addMessageToWindow("Athentication sucessful");
+    			sendJson({requestType: 389, businessRequest: true, id:sessionStorage.getItem(sessId), command:"UPDATE"})
+    		} else {
+    			addMessageToWindow("Athentication fail");
+    		}
+    	}
+    	//General message
+    	if(response.requestType === 735){
+    		 messageWindow.innerHTML = response.command    	
+    	}
+    	//Update num of people
+    	if(response.requestType === 845){
+        	
+    		peopleNumber.innerHTML = response.command 
+    	}
+    	
+    	//StoreCode
+    	if(response.requestType === 945){
+    		storeCode.innerHTML = response.command 
+    	}
+    }
+    	
+    	/** var response = JSON.parse(event.data);
+
+        		if(response.requestType === 678){
+        			addMessageToWindow("Adding ID: "+response.command);
+                    sessionStorage.setItem(sessId, response.command);
+                    
+                   //sendJson({requestType: 793, id:sessionStorage.getItem(sessId)})
+        		} else if(response.requestType === 793){
+        			
+        			if(response.command == true){
+        				//addMessageToWindow("Session found and updated");
+        			} else {
+        				addMessageToWindow("No session found");
+        				sessionStorage.removeItem(sessId);
+        			}
+        			
+        		} else if(response.requestType === 359){
+        			addMessageToWindow(response.command)
+        		}**/
+        		
+        		
+          
+            
+       
+  
+ 
+
+    
+    
+    
+    
+   
+ 
+    
+    
+    function sendJson(obj){
+    	socket.send(JSON.stringify(obj))
+    }
+ 
+    function sendMessage(message) {
+        socket.send(message);
+        addMessageToWindow("Sent Message: " + message);
+    }
+    
+    function sendCommand(thisMessage){
+    	if(sessionStorage.getItem(sessId) === null){
+    		sendJson({requestType: 678, command:thisMessage})
+    	} else {
+    		sendJson({requestType: 958, command:thisMessage, id: sessionStorage.getItem(sessId)})
+ 
+    	}
+    }
+    
+ 
+    
+ 
+    
+</script>
+</html>
+

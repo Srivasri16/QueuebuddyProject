@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #messages {
+            text-align: left;
+            width: 50%;
+            padding: 1em;
+            border: 1px solid black;
+        }
+    </style>
+    <title>Sample WebSocket Client</title>
+    
+</head>
+<body>
+<p>ID: CANMISS0001</p>
+<div class="container">
+    <div id="messages" class="messages"></div>
+    <div class="input-fields">
+        <p>Type the storeID:</p>
+        <input id="message"/>
+        <button id="send">Send</button>
+ 
+        
+    </div>
+    
+    <div class="input-fields-phone">
+        <p>Phone number:</p>
+        <input placeholder="Phone Number" type="text" id="phoneNum"/>
+ 
+        
+    </div>
+    
+    <div class="input-fields-email">
+        <p>Email:</p>
+        <input placeholder="email" type="text" id="emailInput"/>
+ 
+        
+    </div>
+  
+    
+    <button id="cancelbtn">CANCEL</button>
+     <button id="savebtn">Save</button>
+     
+     <button id="pausebtn">PAUSE</button>
+</div>
+</body>
+<script>
+    const messageWindow = document.getElementById("messages");
+ 
+    const sendButton = document.getElementById("send");
+    const messageInput = document.getElementById("message");
+ 
+    const fileInput = document.getElementById("file");
+    const sendImageButton = document.getElementById("sendImage");
+ 
+    const socket = new WebSocket("wss://api.queueme.org:443/socket");
+    
+    const sessId = "sessionID"
+    socket.binaryType = "arraybuffer";
+    
+    
+    
+    
+    sendJson.onclick = function (event){
+    	var obj = { requestType: 123, id: 30, command: "New York" };
+    	sendMessage(JSON.stringify(obj))
+    }
+ 
+    socket.onopen = function (event) {
+    	
+        addMessageToWindow("Connected");
+        if(sessionStorage.getItem(sessId) === null){
+        	//addMessageToWindow("Send Request of ID");
+        	//socket.send("678");
+        } else {
+        	//addMessageToWindow("Checking for session");
+        	
+        	sendJson({requestType: 793, id:sessionStorage.getItem(sessId)})
+        	
+        }
+        
+    };
+ 
+    socket.onmessage = function (event) {
+    	//addMessageToWindow("event.data: "+event.data);
+    	var response = JSON.parse(event.data);
+
+        		if(response.requestType === 678){
+        			addMessageToWindow("Adding ID: "+response.command);
+                    sessionStorage.setItem(sessId, response.command);
+                    
+                   //sendJson({requestType: 793, id:sessionStorage.getItem(sessId)})
+        		} else if(response.requestType === 793){
+        			
+        			if(response.command == true){
+        				//addMessageToWindow("Session found and updated");
+        			} else {
+        				addMessageToWindow("No session found");
+        				sessionStorage.removeItem(sessId);
+        			}
+        			
+        		} else if(response.requestType === 359){
+        			addMessageToWindow(response.command)
+        		}
+        		
+        		
+          
+            
+       
+    };
+ 
+    sendButton.onclick = function (event) {
+    	sendCommand(messageInput.value);
+        messageInput.value = "";
+        
+    };
+    
+    pausebtn.onclick = function(event){
+    	addMessageToWindow("Pause was clicked")
+    	sendCommand("PAUSE")
+    	
+    }
+    
+    
+    cancelbtn.onclick = function (event){
+    	
+    	sendJson({requestType: 958, id:sessionStorage.getItem(sessId), command:"OUT"})
+    	sessionStorage.removeItem(sessId);
+    }
+    
+    savebtn.onclick = function(event){
+    	var phone = null
+    	var thisemail = null
+    	 if( phoneNum.value.length != 0){
+    		 phone = phoneNum.value
+    	 }
+    	
+    	if(emailInput.value.length != 0){
+    		thisemail = emailInput.value
+    	}
+    	sendJson({requestType: 834, id:sessionStorage.getItem(sessId), phoneNum: phone , email:thisemail})
+    }
+ 
+    
+    
+    function sendJson(obj){
+    	socket.send(JSON.stringify(obj))
+    }
+ 
+    function sendMessage(message) {
+        socket.send(message);
+        addMessageToWindow("Sent Message: " + message);
+    }
+    
+    function sendCommand(thisMessage){
+    	if(sessionStorage.getItem(sessId) === null){
+    		sendJson({requestType: 678, command:thisMessage})
+    	} else {
+    		sendJson({requestType: 958, command:thisMessage, id: sessionStorage.getItem(sessId)})
+ 
+    	}
+    }
+ 
+    function addMessageToWindow(message) {
+        messageWindow.innerHTML += `<div>${message}</div>`
+    }
+ 
+    
+</script>
+</html>
